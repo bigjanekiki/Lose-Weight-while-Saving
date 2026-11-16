@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f6f4ef">
+<meta name="description" content="健康存钱打卡器：记录健康行为，积累自己的奖励。">
+<title>健康存钱计划</title>
+<style>
+:root{--bg:#f6f4ef;--card:#fff;--ink:#282a25;--muted:#77796f;--green:#477b5b;--green2:#e8f1e9;--line:#e8e6df;--gold:#a87936}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;padding:env(safe-area-inset-top) 15px calc(24px + env(safe-area-inset-bottom));}
+main{max-width:560px;margin:0 auto}.top{padding:24px 4px 14px}.eyebrow{font-size:12px;color:var(--muted);letter-spacing:1.5px}.top h1{font-size:25px;margin:7px 0 4px}.sub{color:var(--muted);font-size:13px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:18px;margin:12px 0;box-shadow:0 5px 18px #302b1908}
+.balance{font-size:35px;font-weight:750;letter-spacing:-1px;color:var(--green);margin:4px 0}.small{font-size:12px;color:var(--muted)}.row{display:flex;justify-content:space-between;align-items:center;gap:12px}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:15px}.stat{background:#f8f7f3;border-radius:13px;padding:10px}.stat b{display:block;font-size:18px;margin-top:3px}
+h2{font-size:16px;margin:0 0 12px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.action{border:1px solid var(--line);border-radius:16px;padding:13px;background:#fff;text-align:left;color:var(--ink);min-height:145px;cursor:pointer;display:flex;flex-direction:column;align-items:flex-start;gap:7px}
+.action:active{transform:scale(.98);background:var(--green2)}.emoji{font-size:25px}.action strong{font-size:15px}.action span.desc{font-size:11px;color:var(--muted);line-height:1.4;min-height:30px}.reward{margin-top:auto;color:var(--green);font-weight:700;font-size:14px}
+.timer{background:#263d31;color:white;border-radius:18px;padding:17px}.timer .muted{color:#c8d5ca}.timer .phase{font-size:12px;letter-spacing:.5px}.clock{font-size:34px;font-weight:750;font-variant-numeric:tabular-nums;margin:6px 0}.track{height:7px;background:#ffffff35;border-radius:9px;overflow:hidden;margin:12px 0}.track>div{height:100%;width:0;background:#c6dfbd;border-radius:9px}.timer button{background:#ffffff18;color:white;border:1px solid #ffffff55;border-radius:10px;padding:8px 12px}
+input,button{font:inherit}input[type=time],input[type=number]{border:1px solid var(--line);padding:9px;border-radius:10px;background:white;color:var(--ink)}.settings{display:grid;grid-template-columns:1fr 1fr;gap:10px}.field label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px}.field input{width:100%}
+.primary{border:0;border-radius:12px;padding:11px 14px;background:var(--green);color:#fff;font-weight:650;cursor:pointer}.secondary{border:1px solid var(--line);background:#fff;border-radius:10px;padding:9px 12px;color:var(--ink);cursor:pointer}
+.history{display:flex;flex-direction:column;gap:8px}.entry{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);font-size:13px}.entry:last-child{border:0}.entry small{display:block;color:var(--muted);margin-top:3px}.amount{color:var(--green);font-weight:700;white-space:nowrap}
+.note{font-size:11px;color:var(--muted);line-height:1.55}.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:#252a25;color:#fff;padding:11px 16px;border-radius:30px;font-size:13px;opacity:0;pointer-events:none;transition:.2s}.toast.show{opacity:1}
+footer{text-align:center;color:var(--muted);font-size:11px;padding:12px}
+@media(min-width:500px){body{padding-top:24px}.top{padding-top:16px}}
+</style>
+</head>
+<body>
+<main>
+<header class="top">
+ <div class="eyebrow">SMALL ACTIONS · REAL REWARDS</div>
+ <h1>我的健康财富计划 🌱</h1>
+ <div class="sub" id="todayLabel"></div>
+</header>
+<section class="card">
+ <div class="small">累计健康存款</div>
+ <div class="balance" id="balance">¥0.00</div>
+ <div class="small">每一次小小的选择，都在为自己积累奖励。</div>
+ <div class="stats">
+  <div class="stat"><span class="small">今日存入</span><b id="todayTotal">¥0</b></div>
+  <div class="stat"><span class="small">本周存入</span><b id="weekTotal">¥0</b></div>
+  <div class="stat"><span class="small">打卡次数</span><b id="count">0</b></div>
+ </div>
+</section>
+<section class="card">
+ <h2>今天，为自己赢得一笔奖励</h2>
+ <div class="grid" id="actions">
+  <button class="action" data-id="snack"><span class="emoji">🍪</span><strong>战胜嘴馋</strong><span class="desc">这一刻，我选择更好的自己</span><span class="reward">+ ¥2.00</span></button>
+  <button class="action" data-id="move"><span class="emoji">🏃</span><strong>动起来就赢了</strong><span class="desc">哪怕只有 2 分钟，也是进步</span><span class="reward">+ ¥2.00</span></button>
+  <button class="action" data-id="emotion"><span class="emoji">💗</span><strong>情绪由我掌舵</strong><span class="desc">不靠食物惩罚或安慰自己</span><span class="reward">+ ¥3.00</span></button>
+  <button class="action" data-id="portion"><span class="emoji">🥗</span><strong>吃得刚刚好</strong><span class="desc">倾听身体，适量进食，舒适饱腹</span><span class="reward">+ ¥3.00</span></button>
+ </div>
+ <p class="note">点击一次记一次。请只在确实完成相应行为时打卡；没有做到也不扣钱、不惩罚自己。</p>
+</section>
+<section class="card">
+ <div class="row"><h2>16+8 轻断食时钟</h2><span class="small" id="timerState">未开始</span></div>
+ <div class="timer">
+  <div class="phase muted" id="phase">设置你的进食窗口</div>
+  <div class="clock" id="clock">16:00:00</div>
+  <div class="muted small" id="timerHint">设置开始和结束时间后启动计时</div>
+  <div class="track"><div id="progress"></div></div>
+  <div class="row"><span class="muted small" id="windowText">进食窗口：12:00–20:00</span><button id="toggleTimer">开始计时</button></div>
+ </div>
+ <div class="settings" style="margin-top:14px">
+  <div class="field"><label for="eatStart">进食窗口开始</label><input id="eatStart" type="time" value="12:00"></div>
+  <div class="field"><label for="eatEnd">进食窗口结束</label><input id="eatEnd" type="time" value="20:00"></div>
+ </div>
+ <p class="note">默认窗口为 12:00–20:00，可自行修改。计时器只是时间提醒，不代表必须忍受饥饿；如有头晕、不适或特殊健康情况，请停止并优先照顾身体。16:8 并不适合所有人。</p>
+</section>
+<section class="card">
+ <div class="row"><h2>存款记录</h2><button class="secondary" id="undo">撤销最近一次</button></div>
+ <div class="stats" style="margin:0 0 12px">
+  <div class="stat"><span class="small">本月存入</span><b id="monthTotal">¥0</b></div>
+  <div class="stat"><span class="small">本月次数</span><b id="monthCount">0</b></div>
+  <div class="stat"><span class="small">累计次数</span><b id="allCount">0</b></div>
+ </div>
+ <div class="history" id="history"><div class="small">还没有打卡记录，完成一次行动就会出现在这里。</div></div>
+</section>
+<section class="card">
+ <h2>数据与设置</h2>
+ <div class="row" style="margin-bottom:10px"><span class="small">打卡奖励金额（人民币）</span><button class="secondary" id="editRewards">修改金额</button></div>
+ <div class="row"><span class="small">备份数据</span><button class="secondary" id="export">导出记录</button></div>
+ <p class="note">记录保存在当前手机、当前浏览器中。建议定期导出备份；不要清除浏览器网站数据。导出的文件可用于保存你的历史记录。</p>
+</section>
+<footer>一步一步来。稳定比完美更重要。</footer>
+</main>
+<div class="toast" id="toast"></div>
+<script>
+const labels={snack:"战胜嘴馋",move:"动起来就赢了",emotion:"情绪由我掌舵",portion:"吃得刚刚好"};
+const defaults={snack:2,move:2,emotion:3,portion:3};
+let data=JSON.parse(localStorage.getItem("healthySavingsV1")||'{"logs":[],"rewards":{"snack":2,"move":2,"emotion":3,"portion":3},"timer":null}');
+const $=id=>document.getElementById(id);
+const money=n=>"¥"+Number(n||0).toFixed(2);
+const dateKey=d=>{let x=new Date(d);return x.getFullYear()+"-"+String(x.getMonth()+1).padStart(2,"0")+"-"+String(x.getDate()).padStart(2,"0")};
+const today=dateKey(new Date());
+function save(){localStorage.setItem("healthySavingsV1",JSON.stringify(data));render()}
+function sum(arr){return arr.reduce((s,x)=>s+x.amount,0)}
+function monday(d){let x=new Date(d);x.setHours(0,0,0,0);x.setDate(x.getDate()-(x.getDay()+6)%7);return x}
+function render(){
+ const now=new Date(), t=dateKey(now), week=dateKey(monday(now)), month=t.slice(0,7);
+ const logs=data.logs; $("todayLabel").textContent=now.toLocaleDateString("zh-CN",{year:"numeric",month:"long",day:"numeric",weekday:"long"});
+ $("balance").textContent=money(sum(logs)); $("todayTotal").textContent=money(sum(logs.filter(x=>x.date===t)));
+ $("weekTotal").textContent=money(sum(logs.filter(x=>x.date>=week)));
+ $("monthTotal").textContent=money(sum(logs.filter(x=>x.date.startsWith(month))));
+ $("count").textContent=logs.filter(x=>x.date===t).length; $("monthCount").textContent=logs.filter(x=>x.date.startsWith(month)).length; $("allCount").textContent=logs.length;
+ document.querySelectorAll(".action").forEach(b=>b.querySelector(".reward").textContent="+ "+money(data.rewards[b.dataset.id]));
+ let recent=[...logs].reverse().slice(0,12);
+ $("history").innerHTML=recent.length?recent.map(x=>`<div class="entry"><div>${labels[x.id]||"健康打卡"}<small>${x.date} · ${x.time}</small></div><div class="amount">+${money(x.amount)}</div></div>`).join(""):'<div class="small">还没有打卡记录，完成一次行动就会出现在这里。</div>';
+ $("undo").disabled=!logs.length;$("undo").style.opacity=logs.length?1:.45;
+}
+function toast(s){$("toast").textContent=s;$("toast").classList.add("show");setTimeout(()=>$("toast").classList.remove("show"),1800)}
+document.querySelectorAll(".action").forEach(b=>b.addEventListener("click",()=>{let id=b.dataset.id;data.logs.push({id,amount:Number(data.rewards[id]),date:dateKey(new Date()),time:new Date().toLocaleTimeString("zh-CN",{hour:"2-digit",minute:"2-digit"})});save();toast("打卡成功！已存入 "+money(data.rewards[id]))}));
+$("undo").onclick=()=>{if(!data.logs.length)return;if(confirm("撤销最近一次打卡？")){let x=data.logs.pop();save();toast("已撤销："+labels[x.id])}};
+$("editRewards").onclick=()=>{let r={};for(let id of Object.keys(defaults)){let v=prompt(labels[id]+"：每次奖励多少人民币？",data.rewards[id]);if(v===null)return;let n=Number(v);if(!Number.isFinite(n)||n<0){alert("请输入不小于0的数字");return}r[id]=n}data.rewards=r;save();toast("奖励金额已更新")};
+$("export").onclick=()=>{let blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});let a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="健康存钱记录-"+dateKey(new Date())+".json";a.click();URL.revokeObjectURL(a.href)};
+const toMin=s=>{let [h,m]=s.split(":").map(Number);return h*60+m};
+let running=!!data.timer;
+function timerTick(){
+ let start=$("eatStart").value||"12:00",end=$("eatEnd").value||"20:00";$("windowText").textContent="进食窗口："+start+"–"+end;
+ if(!running||!data.timer){$("timerState").textContent="未开始";$("phase").textContent="设置你的进食窗口";$("clock").textContent="16:00:00";$("timerHint").textContent="设置开始和结束时间后启动计时";$("progress").style.width="0%";$("toggleTimer").textContent="开始计时";return}
+ let s=toMin(start),e=toMin(end);if(e<=s)e+=1440;
+ let now=new Date(),m=now.getHours()*60+now.getMinutes()+now.getSeconds()/60;
+ let elapsed=((m-s)%1440+1440)%1440, eating=elapsed<(e-s), total=eating?(e-s):(1440-(e-s)), passed=eating?elapsed:elapsed-(e-s),remain=Math.max(0,total-passed);
+ // Countdown is phase-relative; eating phase counts down to end; fasting phase counts down to next eating start.
+ let sec=Math.floor(remain*60),hh=String(Math.floor(sec/3600)).padStart(2,"0"),mm=String(Math.floor(sec%3600/60)).padStart(2,"0"),ss=String(sec%60).padStart(2,"0");
+ $("clock").textContent=hh+":"+mm+":"+ss;$("phase").textContent=eating?"🍽️ 进食窗口":"🌙 空腹阶段";$("timerState").textContent=eating?"进食中":"空腹中";
+ $("timerHint").textContent=eating?"距离进食窗口结束":"距离下一个进食窗口开始";$("progress").style.width=Math.min(100,passed/total*100)+"%";$("toggleTimer").textContent="暂停计时";
+}
+$("toggleTimer").onclick=()=>{if(running){running=false;data.timer=null;localStorage.setItem("healthySavingsV1",JSON.stringify(data));}else{let s=$("eatStart").value,e=$("eatEnd").value;if(s===e){alert("开始和结束时间不能相同");return}running=true;data.timer={start:s,end:e};localStorage.setItem("healthySavingsV1",JSON.stringify(data))}timerTick()};
+["eatStart","eatEnd"].forEach(id=>$(id).addEventListener("change",()=>{if(running){data.timer={start:$("eatStart").value,end:$("eatEnd").value};localStorage.setItem("healthySavingsV1",JSON.stringify(data))}timerTick()}));
+if(data.timer){$("eatStart").value=data.timer.start||"12:00";$("eatEnd").value=data.timer.end||"20:00";running=true}
+render();timerTick();setInterval(timerTick,1000);
+</script>
+</body></html>
