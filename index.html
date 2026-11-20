@@ -69,18 +69,18 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:12px}.empty{f
 
 <section class="card">
  <h2>饮食觉察日记</h2>
- <p class="section-note">记录发生了什么，也可以简单写下当时的情境或感受。保存时自动记录日期和时间，并同步生成对应支出流水。</p>
+ <p class="section-note">记录发生了什么、当时的想法与情绪。保存时自动记录日期和时间，不会产生任何收入或支出。</p>
  <div class="form-grid">
   <div class="field"><label for="diaryCategory">这次属于哪种情况？</label>
    <select id="diaryCategory">
-    <option value="snack">吃零食（−¥15）</option>
-    <option value="meal_over">正餐吃多（−¥13）</option>
-    <option value="other">其他非计划进食／情绪性进食（−¥10）</option>
+    <option value="snack">吃零食</option>
+    <option value="meal_over">正餐吃多</option>
+    <option value="other">其他非计划进食／情绪性进食</option>
    </select>
   </div>
-  <div class="field"><label for="diaryNote">当时发生了什么？（选填）</label><textarea id="diaryNote" placeholder="例如：下午工作压力大，看到零食就想吃……"></textarea></div>
+  <div class="field"><label for="diaryNote">发生了什么？当时有什么想法或情绪？（选填）</label><textarea id="diaryNote" placeholder="例如：下午工作压力大，看到零食就想吃……"></textarea></div>
  </div>
- <div class="form-actions"><button class="primary" id="saveDiary">保存日记并记入支出</button></div>
+ <div class="form-actions"><button class="primary" id="saveDiary">保存日记</button></div>
  <div style="margin-top:16px"><div class="row"><strong style="font-size:13px">最近的觉察记录</strong><span class="small" id="diaryCount">0 条</span></div><div class="history" id="diaryHistory"></div></div>
 </section>
 
@@ -111,24 +111,23 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:12px}.empty{f
 </section>
 
 <section class="card">
- <div class="row"><h2>16+8 轻断食时钟</h2><span class="small" id="timerState">未开始</span></div>
+ <div class="row"><h2>断食计时</h2><span class="small" id="timerState">未开始</span></div>
  <div class="timer">
-  <div class="phase muted" id="phase">设置你的进食窗口</div>
-  <div class="clock" id="clock">16:00:00</div>
-  <div class="muted small" id="timerHint">设置开始和结束时间后启动计时</div>
+  <div class="phase muted" id="phase">准备开始断食</div>
+  <div class="clock" id="clock">00:00:00</div>
+  <div class="muted small" id="timerHint">点击「断食开始」记录开始时间</div>
   <div class="track"><div id="progress"></div></div>
-  <div class="row"><span class="muted small" id="windowText">进食窗口：12:00–20:00</span><button id="toggleTimer">开始计时</button></div>
+  <div class="row"><span class="muted small" id="fastTargetText">目标：16小时</span><span class="muted small" id="fastProgressText">0%</span></div>
+  <div class="form-actions"><button class="primary" id="fastStart">断食开始</button><button class="secondary" id="fastEnd" disabled>断食结束</button></div>
  </div>
- <div class="settings">
-  <div class="field"><label for="eatStart">进食窗口开始</label><input id="eatStart" type="time" value="12:00"></div>
-  <div class="field"><label for="eatEnd">进食窗口结束</label><input id="eatEnd" type="time" value="20:00"></div>
- </div>
- <p class="note" style="margin-top:10px">计时器只是时间提醒，不代表必须忍受饥饿；如有不适，请优先照顾身体。16:8并不适合所有人。</p>
+ <div style="margin-top:16px"><div class="row"><strong style="font-size:13px">本次断食</strong><span class="small" id="fastCurrentStatus">尚未开始</span></div><div class="small" id="fastCurrentDetails" style="margin-top:7px">开始时间和结束时间将在这里显示。</div></div>
+ <div style="margin-top:16px"><div class="row"><strong style="font-size:13px">历史断食记录</strong><span class="small" id="fastRecordCount">0 次</span></div><div class="history" id="fastHistory"></div></div>
+ <p class="note" style="margin-top:10px">计时器只是时间记录与提醒，不代表必须忍受饥饿；如有不适，请优先照顾身体。16:8并不适合所有人。</p>
 </section>
 
 <section class="card">
  <h2>数据与备份</h2>
- <div class="row"><span class="small">导出全部流水、日记与设置</span><button class="secondary" id="export">导出备份</button></div>
+ <div class="row"><span class="small">导出全部流水、日记、断食记录与设置</span><button class="secondary" id="export">导出备份</button></div>
  <p class="note">数据仍保存在当前设备、当前浏览器。更换手机或清除网站数据前，请先导出备份。当前版本尚未启用云端同步。</p>
 </section>
 <footer>一步一步来。稳定比完美更重要。</footer>
@@ -203,9 +202,8 @@ function renderLedger(){
  $("ledgerHistory").innerHTML=items.length?items.slice(0,30).map(x=>transactionHTML(x)).join(""):'<div class="empty">还没有流水记录。</div>';
  document.querySelectorAll("[data-delete-tx]").forEach(btn=>btn.onclick=()=>{
   const id=btn.dataset.deleteTx,tx=data.transactions.find(x=>x.id===id);if(!tx)return;
-  if(!confirm("确定删除这笔流水？若它来自饮食日记，对应日记也会一并删除。"))return;
+  if(!confirm("确定删除这笔流水？日记不会受到影响。"))return;
   data.transactions=data.transactions.filter(x=>x.id!==id);
-  if(tx.diaryId)data.diary=data.diary.filter(d=>d.id!==tx.diaryId);
   save();toast("记录已删除");
  });
 }
@@ -215,9 +213,9 @@ function renderDiary(){
  $("diaryHistory").innerHTML=items.length?items.slice(0,5).map(d=>`<div class="entry"><div style="flex:1;min-width:0"><strong>${escapeHTML(d.label)}</strong><small>${stampText(d.ts)}${d.note?" · "+escapeHTML(d.note):""}</small></div><button class="danger" data-delete-diary="${d.id}">删除</button></div>`).join(""):'<div class="empty">还没有日记。记录不是为了责备自己，而是为了更了解自己。</div>';
  document.querySelectorAll("[data-delete-diary]").forEach(btn=>btn.onclick=()=>{
   const d=data.diary.find(x=>x.id===btn.dataset.deleteDiary);if(!d)return;
-  if(!confirm("删除这条日记及其对应支出流水？"))return;
-  data.diary=data.diary.filter(x=>x.id!==d.id);data.transactions=data.transactions.filter(x=>x.diaryId!==d.id);
-  save();toast("日记及对应流水已删除");
+  if(!confirm("确定删除这条日记？"))return;
+  data.diary=data.diary.filter(x=>x.id!==d.id);
+  save();toast("日记已删除");
  });
 }
 function renderReview(){
@@ -242,10 +240,11 @@ document.querySelectorAll("#expenseActions .action").forEach(btn=>btn.addEventLi
  toast("已记录支出 −"+money(def.amount));
 }));
 $("saveDiary").onclick=()=>{
- const category=$("diaryCategory").value,def=expenseDefs[category],note=$("diaryNote").value.trim(),ts=Date.now(),diaryId=makeId();
- const d={id:diaryId,category,label:def.label,note,ts};data.diary.push(d);
- data.transactions.push({id:makeId(),kind:"expense",category,label:def.label,amount:def.amount,ts,note,diaryId});
- $("diaryNote").value="";save();toast("日记已保存，支出流水已同步记录");
+ const category=$("diaryCategory").value;
+ const labels={snack:"吃零食",meal_over:"正餐吃多",other:"其他非计划进食／情绪性进食"};
+ const note=$("diaryNote").value.trim(),ts=Date.now();
+ data.diary.push({id:makeId(),category,label:labels[category]||"饮食觉察",note,ts});
+ $("diaryNote").value="";save();toast("日记已保存，未产生任何收支");
 };
 $("reviewMonth").value=localMonth();$("reviewMonth").addEventListener("change",renderReview);
 $("thisMonth").onclick=()=>{$("reviewMonth").value=localMonth();renderReview()};
@@ -254,27 +253,52 @@ $("export").onclick=()=>{
  const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
  const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="Healthy-Savings-备份-"+dateKey(new Date())+".json";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
 };
-const toMin=s=>{let [h,m]=s.split(":").map(Number);return h*60+m};
-let running=!!data.timer;
-function timerTick(){
- let start=$("eatStart").value||"12:00",end=$("eatEnd").value||"20:00";$("windowText").textContent="进食窗口："+start+"–"+end;
- if(!running||!data.timer){$("timerState").textContent="未开始";$("phase").textContent="设置你的进食窗口";$("clock").textContent="16:00:00";$("timerHint").textContent="设置开始和结束时间后启动计时";$("progress").style.width="0%";$("toggleTimer").textContent="开始计时";return}
- let s=toMin(start),e=toMin(end);if(e<=s)e+=1440;
- let now=new Date(),m=now.getHours()*60+now.getMinutes()+now.getSeconds()/60;
- let elapsed=((m-s)%1440+1440)%1440,eating=elapsed<(e-s),total=eating?(e-s):(1440-(e-s)),passed=eating?elapsed:elapsed-(e-s),remain=Math.max(0,total-passed);
- let sec=Math.floor(remain*60),hh=String(Math.floor(sec/3600)).padStart(2,"0"),mm=String(Math.floor(sec%3600/60)).padStart(2,"0"),ss=String(sec%60).padStart(2,"0");
- $("clock").textContent=hh+":"+mm+":"+ss;$("phase").textContent=eating?"🍽️ 进食窗口":"🌙 空腹阶段";$("timerState").textContent=eating?"进食中":"空腹中";$("timerHint").textContent=eating?"距离进食窗口结束":"距离下一个进食窗口开始";$("progress").style.width=Math.min(100,passed/total*100)+"%";$("toggleTimer").textContent="暂停计时";
+const FAST_TARGET_HOURS=16;
+if(!data.fastTimer||typeof data.fastTimer!=="object")data.fastTimer={activeStart:null,sessions:[]};
+if(!Array.isArray(data.fastTimer.sessions))data.fastTimer.sessions=[];
+function durationText(ms){
+ const n=Math.max(0,Math.floor(ms/1000)),days=Math.floor(n/86400),hh=Math.floor(n%86400/3600),mm=Math.floor(n%3600/60),ss=n%60;
+ return (days?days+"天 ":"")+String(hh).padStart(2,"0")+":"+String(mm).padStart(2,"0")+":"+String(ss).padStart(2,"0");
 }
-$("toggleTimer").onclick=()=>{
- if(running){running=false;data.timer=null}else{let s=$("eatStart").value,e=$("eatEnd").value;if(s===e){alert("开始和结束时间不能相同");return}running=true;data.timer={start:s,end:e}}
- localStorage.setItem(STORAGE_KEY,JSON.stringify(data));timerTick();
+function fastStamp(ts){const d=new Date(ts);return d.toLocaleTimeString("zh-CN",{hour:"2-digit",minute:"2-digit",second:"2-digit"});}
+function renderFastHistory(){
+ const arr=[...data.fastTimer.sessions].sort((a,b)=>b.start-a.start);
+ $("fastRecordCount").textContent=arr.length+" 次";
+ $("fastHistory").innerHTML=arr.length?arr.map(x=>{
+  const ms=x.end-x.start,pct=Math.min(100,ms/(FAST_TARGET_HOURS*3600000)*100);
+  return `<div class="entry" style="display:block"><div class="row"><strong>${new Date(x.start).toLocaleDateString("zh-CN")}</strong><span class="amount">${durationText(ms)}</span></div><small style="display:block;margin:5px 0">${fastStamp(x.start)} — ${fastStamp(x.end)}</small><div class="track" style="background:#e9eee8;margin:7px 0"><div style="width:${pct}%;background:#477b5b"></div></div><small>${Math.floor(pct)}% / 目标 ${FAST_TARGET_HOURS} 小时</small></div>`;
+ }).join(""):'<div class="empty">完成第一次断食后，记录会显示在这里。</div>';
+}
+function fastTick(){
+ const start=data.fastTimer.activeStart;
+ $("fastTargetText").textContent="目标："+FAST_TARGET_HOURS+"小时";
+ if(start){
+  const ms=Date.now()-start,pct=Math.min(100,ms/(FAST_TARGET_HOURS*3600000)*100);
+  $("timerState").textContent="断食中";$("phase").textContent="🌙 正在断食";$("clock").textContent=durationText(ms);
+  $("timerHint").textContent="已持续断食 "+durationText(ms);$("fastCurrentStatus").textContent="进行中";
+  $("fastCurrentDetails").textContent="开始时间："+fastStamp(start)+"；已持续："+durationText(ms);
+  $("fastStart").disabled=true;$("fastEnd").disabled=false;$("progress").style.width=pct+"%";$("fastProgressText").textContent=Math.floor(pct)+"%";
+ }else{
+  $("timerState").textContent="未开始";$("phase").textContent="准备开始断食";$("clock").textContent="00:00:00";
+  $("timerHint").textContent="点击「断食开始」记录开始时间";$("fastCurrentStatus").textContent="尚未开始";
+  $("fastCurrentDetails").textContent="开始时间和结束时间将在这里显示。";
+  $("fastStart").disabled=false;$("fastEnd").disabled=true;$("progress").style.width="0%";$("fastProgressText").textContent="0%";
+ }
+ renderFastHistory();
+}
+$("fastStart").onclick=()=>{
+ if(data.fastTimer.activeStart)return;
+ data.fastTimer.activeStart=Date.now();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));fastTick();toast("已开始记录本次断食");
 };
-["eatStart","eatEnd"].forEach(id=>$(id).addEventListener("change",()=>{if(running){data.timer={start:$("eatStart").value,end:$("eatEnd").value};localStorage.setItem(STORAGE_KEY,JSON.stringify(data))}timerTick()}));
-if(data.timer){$("eatStart").value=data.timer.start||"12:00";$("eatEnd").value=data.timer.end||"20:00";running=true}
+$("fastEnd").onclick=()=>{
+ const start=data.fastTimer.activeStart;if(!start)return;
+ const end=Date.now();data.fastTimer.sessions.push({id:makeId(),start,end});data.fastTimer.activeStart=null;
+ localStorage.setItem(STORAGE_KEY,JSON.stringify(data));fastTick();toast("本次断食已保存："+durationText(end-start));
+};
 if(data.migratedFromV1){localStorage.setItem(STORAGE_KEY,JSON.stringify(data));toast("旧版打卡记录已迁移并保留")}
-renderAll();timerTick();
+renderAll();fastTick();
 // 日期切换依靠每次刷新统计时重新读取本地日期，不清空历史流水。
-setInterval(()=>{renderSummary();renderReview()},30000);setInterval(timerTick,1000);
+setInterval(()=>{renderSummary();renderReview()},30000);setInterval(fastTick,1000);
 </script>
 </body>
 </html>
